@@ -53,6 +53,10 @@ int main(int argc, char** argv){
       extract = 1;
       toextract = strdup(optarg);
       break;
+    case 'f':
+      fsname = strdup(optarg);
+      filefsname = 1;
+      break;
     default:
       exitusage(argv[0]);
     }

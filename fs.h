@@ -21,29 +21,26 @@
 #define INEND 122
 
 extern unsigned char* fs;
-
-#pragma pack(push, 1)
+#pragma pack(push)
 typedef struct SB {
 
-    char * block;
+    short block;
 
 } super_block;
 #pragma pack(pop)
-
-#pragma pack(push, 1)
+#pragma pack(push)
 typedef struct IN {
 
-    char * valid;
-    char * size;
-    char * direct;
+    char valid;
+    char size;
+    char direct[100];
 
 } inode;
 #pragma pack(pop)
-
-#pragma pack(push, 1)
+#pragma pack(push)
 typedef struct FBL {
 
-    bitmap * list;
+    bitmap list[2];
 
 } free_list;
 #pragma pack(pop)

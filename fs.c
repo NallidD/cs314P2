@@ -26,20 +26,31 @@ void formatfs(){
   fl = (struct FBL *)malloc(sizeof(struct FBL));
   node = (struct IN *)malloc(sizeof(struct IN));
 
-  sb->block = (char *)calloc(16, sizeof(char));
-  fl->list = (bitmap *)calloc(2, sizeof(bitmap));
-  node->valid = (char *)calloc(1, sizeof(char));
-  node->size = (char *)calloc(1, sizeof(char));
-  node->direct = (char *)calloc(100, sizeof(char));
+  sb->block = 0;
+  fl->list[0] = 0;
+  fl->list[1] = 0;
+  node->valid = 0;
+  node->size = 0;
+  
+  for(int i = 0; i < 100; i++) {
 
-  memccpy(fs, sb->block, 0, sizeof(sb->block));
-  memccpy(fs + 16, fl->list, 0, sizeof(fl->list));
-  memccpy(fs + 17, node->valid, 0, sizeof(node->valid));
-  memccpy(fs + 18, node->size, 0, sizeof(node->size));
-  memccpy(fs + 19, node->direct, 0, sizeof(node->direct));
+    node->direct[i] = 0;
 
-  printf("super block: %d - %d, free list: %d - %d, node valid: %d - %d, node size: %d - %d, node direct: %d \n", 
-          fs[SBBEGIN], fs[SBEND], fs[FLBEGIN], fs[FLEND], fs[INBEGIN], fs[INBEGIN + 1], fs[INBEGIN + 2], fs[INBEGIN + 3], fs[INEND]);
+  }
+
+
+  memccpy(fs, &sb->block, 0, sizeof(sb->block));
+  memccpy(fs + 16, &fl->list, 0, sizeof(fl->list));
+  memccpy(fs + 17, &node->valid, 0, sizeof(node->valid));
+  memccpy(fs + 18, &node->size, 0, sizeof(node->size));
+  memccpy(fs + 19, &node->direct, 0, sizeof(node->direct));
+
+  printf("super block size: %ld, free list size: %ld, node valid size: %ld, node size size: %ld, node direct size: %ld\n, total: %ld",
+        sizeof(struct SB), sizeof(struct FBL), sizeof(node->valid), sizeof(node->size), sizeof(node->direct),
+        sizeof(sb) + sizeof(fl) + sizeof(node->valid) + sizeof(node->size) + sizeof(node->direct));
+
+  // printf("super block: %d - %d, free list: %d - %d, node valid: %d - %d, node size: %d - %d, node direct: %d \n", 
+  //         fs[SBBEGIN], fs[SBEND], fs[FLBEGIN], fs[FLEND], fs[INBEGIN], fs[INBEGIN + 1], fs[INBEGIN + 2], fs[INBEGIN + 3], fs[INEND]);
 
 
 }
