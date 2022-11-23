@@ -2,6 +2,17 @@
 
 unsigned char* fs;
 
+void init_blocks(super_block * sb, inode * node, free_list * fl) {
+
+  for(int i = 0; i < 4096; i++) {
+
+    
+
+
+  }
+
+}
+
 void mapfs(int fd){
   if ((fs = mmap(NULL, FSSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == NULL){
       perror("mmap failed");
@@ -26,7 +37,7 @@ void formatfs(){
   fl = (struct FBL *)malloc(sizeof(struct FBL));
   node = (struct IN *)malloc(sizeof(struct IN));
 
-  sb->block = 0;
+  sb->block;
   fl->list[0] = 0;
   fl->list[1] = 0;
   node->valid = 0;
