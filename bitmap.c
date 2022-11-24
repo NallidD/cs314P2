@@ -1,25 +1,31 @@
 #include "bitmap.h"
 
-void set_bit(bitmap bits, int index) {
+void set_bit(bitmap bits, int index){
 
     bits[index / 8] |= 1 << (index & 7);
 
 }
 
-void unset_bit(bitmap bits, int index) {
+void clear_bit(bitmap bits, int index) {
 
     bits[index / 8] &= ~(1 << (index & 7));
 
 }
 
-char grab_bit(bitmap bits, int index) {
+char get_bit(bitmap bits, int index) {
 
     return bits[index / 8] & (1 << (index & 7)) ? 1 : 0;
 
 }
 
-bitmap create(int size) {
+bitmap make_bitmap(int n) {
 
-    return malloc((size + 7) / 8);
+    return (bitmap)malloc((n + 7) / 8);
+
+}
+
+void remove_bitmap(bitmap map) {
+
+    free(map);
 
 }

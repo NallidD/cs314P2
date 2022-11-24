@@ -31,7 +31,7 @@ typedef struct SB {
     char data_block_total;
     char num_blocks;
 
-} super_block __attribute__((packed, aligned(4096))); //promised for 4096kb of space
+} __attribute__((packed, aligned(4096))) super_block; //promised for 4096kb of space
 
 typedef struct IN {
 
@@ -39,15 +39,17 @@ typedef struct IN {
     char size;
     char direct[100];
 
-} inode;
+} __attribute__((packed, aligned(4096))) inode;
 
 typedef struct FBL {
 
     bitmap list[2];
 
-} free_list;
+} __attribute__((packed, aligned(4096))) free_list;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl);
+void print_blocks(super_block * sb, inode * node, free_list * fl);
+void print_buffer();
 void mapfs(int fd);
 void unmapfs();
 void formatfs();
