@@ -26,7 +26,7 @@ typedef struct SB {
 
 typedef struct IN {
 
-    char valid;
+    char valid; //checks if inode is active
     char size;
     char direct[100];
 
@@ -41,6 +41,7 @@ typedef struct FBL {
 void init_blocks(super_block * sb, inode * node, free_list * fl);
 void print_blocks(super_block * sb, inode * node, free_list * fl);
 void print_buffer();
+void write_to_buffer(super_block * sb, inode * node, free_list * fl);
 void mapfs(int fd);
 void unmapfs();
 void formatfs();

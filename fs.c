@@ -138,6 +138,16 @@ void print_buffer() {
 
 }
 
+void write_to_buffer(super_block * sb, inode * node, free_list * fl) {
+
+  for(int i = 0; i < 8; i++) {
+
+    fs[i] = sb->fs_type[i];
+
+  }
+
+}
+
 void mapfs(int fd){
   if ((fs = mmap(NULL, FSSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == NULL){
       perror("mmap failed");
@@ -151,7 +161,7 @@ void unmapfs(){
 }
 
 
-void formatfs(){
+void formatfs() {
 
   struct SB * sb;
   struct IN * node;
@@ -163,12 +173,18 @@ void formatfs(){
   
   init_blocks(sb, node, fl);
   
-  memmove(fs, sb, sizeof(struct SB));
-  memmove(fs + sizeof(struct SB), node, sizeof(struct IN));
-  memmove(fs + sizeof(struct SB) + sizeof(struct IN), fl, sizeof(struct FBL));
+  // memmove(fs, sb, sizeof(struct SB));
+  // memmove(fs + sizeof(struct SB), node, sizeof(struct IN));
+  // memmove(fs + sizeof(struct SB) + sizeof(struct IN), fl, sizeof(struct FBL));
+
+  write_to_buffer(sb, node, fl);
 
   print_blocks(sb, node, fl);
   print_buffer();
+
+  free(sb);
+  free(node);
+  free(fl);
 
 }
 
