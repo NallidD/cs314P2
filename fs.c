@@ -156,7 +156,6 @@ void formatfs(){
   struct SB * sb;
   struct IN * node;
   struct FBL * fl;
-  int offset = SBBEGIN;
 
   sb = (struct SB *)malloc(sizeof(struct SB));
   node = (struct IN *)malloc(sizeof(struct IN));

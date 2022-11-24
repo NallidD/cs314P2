@@ -10,15 +10,6 @@
 #include "bitmap.h"
 
 #define FSSIZE 10485760
-#define DIRECTSIZE 12
-#define NULLBLOCK 0
-#define VALIDBLOCK 1
-#define SBBEGIN 0
-#define SBEND 4096
-#define FLBEGIN 8191
-#define FLEND 8192
-#define INBEGIN 4097
-#define INEND 8190
 
 extern unsigned char* fs;
 
