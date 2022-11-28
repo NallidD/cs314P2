@@ -49,7 +49,7 @@ typedef struct Directory {
 
     char * files[64];
     int filesizes[100];
-    int fileinoides[100];
+    int fileinodes[100];
     int num_files;
 
 } dir;
