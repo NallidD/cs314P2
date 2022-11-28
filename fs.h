@@ -27,7 +27,8 @@ typedef struct SB {
 typedef struct IN {
 
     char valid; //checks if inode is active
-    char size;
+    int size;
+    int num_blocks;
     char direct[100];
 
 } __attribute__((packed, aligned(4096))) inode;
@@ -37,6 +38,21 @@ typedef struct FBL {
     bitmap list[2];
 
 } __attribute__((packed, aligned(4096))) free_list;
+
+typedef struct DB {
+
+    char data[512];
+
+} __attribute((packed, aligned(512))) data_block;
+
+typedef struct Directory {
+
+    char * files[64];
+    int filesizes[100];
+    int fileinoides[100];
+    int num_files;
+
+} dir;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl);
 void print_blocks(super_block * sb, inode * node, free_list * fl);
