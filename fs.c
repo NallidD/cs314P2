@@ -1,5 +1,7 @@
 #include "fs.h"
 
+unsigned char inode_bitmap[4096];
+unsigned char data_bitmap[4096];
 unsigned char* fs;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl) {
@@ -148,6 +150,12 @@ void write_to_buffer(super_block * sb, inode * node, free_list * fl) {
 
 }
 
+unsigned int get_next_data_block() {
+
+
+
+}
+
 void mapfs(int fd){
   if ((fs = mmap(NULL, FSSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == NULL){
       perror("mmap failed");
@@ -191,6 +199,8 @@ void formatfs() {
 
 void loadfs(){
 
+
+
 }
 
 
@@ -200,10 +210,63 @@ void lsfs(){
 
 void addfilefs(char* fname){
 
+  int fd = open(fname, O_WRONLY, 0700); //open file to add
+
+  if(fd == -1) {
+
+    perror("File not found.\n");
+    exit(EXIT_FAILURE);
+
+  }
+
+  FILE * file = fdopen(fd, "w+"); //convert fd to file pointer
+
+  int pos = ftell(file); //get cur pos in file
+
+  fseek(file, 0, SEEK_END); //go to end of file
+
+  int size = ftell(file); //get cur size of file
+
+  fseek(file, pos, SEEK_SET); //reset position to beginning of file
+
+  if(fread(fs, 1, size, file) != size) {
+
+    perror("Could not read file to buffer.\n");
+    exit(EXIT_FAILURE);
+
+  }
+
+  fclose(file);
+
 }
 
 
 void removefilefs(char* fname){
+
+  int fd = open(fname, O_RDWR);
+
+  if(fd == -1) {
+
+    perror("File not found.\n");
+    exit(EXIT_FAILURE);
+
+  }
+
+  FILE * file = fdopen(fd, 0700);
+
+  int pos = ftell(file);
+
+  fseek(file, 0, SEEK_END);
+
+  int size = ftell(file);
+
+  fseek(file, 0, SEEK_SET);
+
+  for(int i = pos; i < size; i++) {
+
+    fs[i] = 0;
+
+  }
 
 }
 

@@ -7,9 +7,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <fcntl.h>
 #include "bitmap.h"
 
 #define FSSIZE 10485760
+
+extern unsigned char inode_bitmap[4096];
+extern unsigned char data_bitmap[4096];
 
 extern unsigned char* fs;
 
@@ -27,6 +31,7 @@ typedef struct SB {
 typedef struct IN {
 
     char valid; //checks if inode is active
+    char type;
     int size;
     int num_blocks;
     char direct[100];
@@ -58,6 +63,7 @@ void init_blocks(super_block * sb, inode * node, free_list * fl);
 void print_blocks(super_block * sb, inode * node, free_list * fl);
 void print_buffer();
 void write_to_buffer(super_block * sb, inode * node, free_list * fl);
+unsigned int get_next_data_block();
 void mapfs(int fd);
 void unmapfs();
 void formatfs();
