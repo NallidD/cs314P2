@@ -6,41 +6,26 @@ unsigned char* fs;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl) {
 
-  for(int i = 0; i < 8; i++) {
+  memset(inode_bitmap, 0, BLOCK_SIZE);
+  memset(data_bitmap, 0, BLOCK_SIZE);
 
-      sb->fs_type[i] = (char)256;
-
-  }
-
-  sb->block_total = 5; // 1 super block, 4 inodes
-  sb->root_index = sizeof(struct SB) + (sizeof(struct IN) * 4);
-  sb->data_index = sizeof(struct SB) + (sizeof(struct IN) * 4);
+  memset(sb->fs_type, 1, 8);
+  sb->block_total = 4;
+  sb->root_index = BLOCK_SIZE * 5;
+  sb->data_index = BLOCK_SIZE * 5;
   sb->data_block_total = 1;
-  sb->num_blocks = 6;
 
-  for(int i = 0; i < 100; i++) {
-
-    node->direct[i] = 0;
-
-  }
-
-  fl->list[0] = make_bitmap(8);
-  fl->list[1] = make_bitmap(8);
-
-  for(int i = 0; i < 8; i++) {
-
-    set_bit(fl->list[0], i + 1);
-
-  }
-
-  for(int i = 0; i < 8; i++) {
-
-    set_bit(fl->list[1], i + 1);
-
-  }
-
-  node->valid = 0;
+  memset(node->direct, 0, 100);
+  node->valid = 1;
   node->size = 0;
+  node->type = 1;
+
+  for(int i = 0; i < 8; i++) {
+
+    fl->list[i] = make_bitmap(8);
+    memset(fl->list + i, 0, 8);
+
+  }
 
 }
 
@@ -56,8 +41,8 @@ void print_blocks(super_block * sb, inode * node, free_list * fl) {
 
   }
 
-  printf(" }\t{ SB->block_total, %d }\t{ SB->root_index, %d }\t{ SB->data_index, %d }\t{ SB->data_block_total, %d }\t{ SB->num_blocks, %d }\n",
-  sb->block_total, sb->root_index, sb->data_index, sb->data_block_total, sb->num_blocks);
+  printf(" }\t{ SB->block_total, %d }\t{ SB->root_index, %d }\t{ SB->data_index, %d }\t{ SB->data_block_total, %d }\t\n",
+  sb->block_total, sb->root_index, sb->data_index, sb->data_block_total);
   printf("{ IN->valid, %d }\t{ IN->size, %d }\t{IN->direct[0...100], ", node->valid, node->size);
 
   for(int i = 0; i < 100; i++) {
@@ -157,7 +142,7 @@ unsigned int get_next_data_block() {
 }
 
 void mapfs(int fd){
-  if ((fs = mmap(NULL, FSSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == NULL){
+  if ((fs = mmap(NULL, FSSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == NULL) {
       perror("mmap failed");
       exit(EXIT_FAILURE);
   }
@@ -180,10 +165,6 @@ void formatfs() {
   fl = (struct FBL *)malloc(sizeof(struct FBL));
   
   init_blocks(sb, node, fl);
-  
-  // memmove(fs, sb, sizeof(struct SB));
-  // memmove(fs + sizeof(struct SB), node, sizeof(struct IN));
-  // memmove(fs + sizeof(struct SB) + sizeof(struct IN), fl, sizeof(struct FBL));
 
   write_to_buffer(sb, node, fl);
 
@@ -193,6 +174,18 @@ void formatfs() {
   free(sb);
   free(node);
   free(fl);
+
+}
+
+inode * make_inode(int size, char type) {
+
+  inode * node = (inode *)malloc(sizeof(inode));
+  node->size = size;
+  node->type = type;
+  node->num_blocks = size / BLOCK_SIZE + ((size % BLOCK_SIZE) != 0);
+  node->valid = 0;
+
+  return node;
 
 }
 
@@ -219,24 +212,20 @@ void addfilefs(char* fname){
 
   }
 
-  FILE * file = fdopen(fd, "w+"); //convert fd to file pointer
+  int pos = lseek(fd, 0, SEEK_CUR); //get cur pos in file
 
-  int pos = ftell(file); //get cur pos in file
+  lseek(fd, 0, SEEK_END); //go to end of file
 
-  fseek(file, 0, SEEK_END); //go to end of file
+  int size = lseek(fd, 0, SEEK_CUR); //get cur size of file
 
-  int size = ftell(file); //get cur size of file
+  lseek(fd, pos, SEEK_SET); //reset position to beginning of file
 
-  fseek(file, pos, SEEK_SET); //reset position to beginning of file
-
-  if(fread(fs, 1, size, file) != size) {
+  if(read(fd, fs, size) != size) {
 
     perror("Could not read file to buffer.\n");
     exit(EXIT_FAILURE);
 
   }
-
-  fclose(file);
 
 }
 
@@ -252,13 +241,22 @@ void removefilefs(char* fname){
 
   }
 
-  FILE * file = fdopen(fd, 0700);
+  FILE * file = fdopen(fd, "wr");
 
   int pos = ftell(file);
 
   fseek(file, 0, SEEK_END);
 
   int size = ftell(file);
+
+  char c = fgetc(file);
+
+  while(c != EOF) {
+
+    printf("%c", c);
+    c = fgetc(file);
+
+  }
 
   fseek(file, 0, SEEK_SET);
 
