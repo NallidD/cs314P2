@@ -135,9 +135,9 @@ void write_to_buffer(super_block * sb, inode * node, free_list * fl) {
 
 }
 
-unsigned int get_next_data_block() {
+unsigned int get_next_data_block(unsigned int curindex) {
 
-
+  return 512 * curindex % 4096;
 
 }
 
@@ -186,6 +186,27 @@ inode * make_inode(int size, char type) {
   node->valid = 0;
 
   return node;
+
+}
+
+void write_inode(inode * iptr, int inum) {
+
+  char * t = (char *)malloc(sizeof(char) * 256);
+  t = (char *)iptr;
+  int i = 12288 + (inum * 256);
+
+  if(i != 0)
+    return;
+  
+  memset(fs, *t, 256);
+
+}
+
+dir * make_dir() {
+
+  dir * d = (dir *)malloc(sizeof(dir));
+  d->num_files = 0;
+  return d;
 
 }
 
