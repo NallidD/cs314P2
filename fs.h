@@ -16,8 +16,17 @@
 #define BLOCK_SIZE 4096 //4K bytes
 #define TOTAL_DATA_BLOCKS 73400320 //total 512 byte data blocks in the fs
 #define SUPER_OFFSET 4096
-#define NODE_TABLE_OFFSET SUPER_OFFSET + 4096
-#define DATA_TABLE_OFFSET NODE_TABLE_OFFSET + 4096
+#define NODE_TABLE_OFFSET SUPER_OFFSET + BLOCK_SIZE
+#define DATA_TABLE_OFFSET NODE_TABLE_OFFSET + BLOCK_SIZE
+#define INODE_START 12288
+
+/*
+
+12288 + (inode_index * sizeof(inode))
+63 4K blocks for inodes
+2494 4K blocks for data
+
+*/
 
 extern unsigned char inode_bitmap[4096];
 extern unsigned char data_bitmap[4096];
@@ -40,13 +49,13 @@ typedef struct IN {
     char type;
     int size;
     int num_blocks;
-    char direct[100];
+    char ptr_to_block;
 
 } __attribute__((packed, aligned(256))) inode;
 
 typedef struct FBL {
 
-    bitmap list[8];
+    bitmap list[13]; //8 bits per list, 13 total indeces = 104 bits -> covers our 100 inodes
 
 } __attribute__((packed, aligned(64))) free_list;
 
@@ -62,8 +71,12 @@ typedef struct Directory {
     int filesizes[100];
     int fileinodes[100];
     int num_files;
+    struct Directory * next;
 
 } __attribute((packed, aligned(512))) dir;
+
+extern inode * inodes;
+extern data_block * data;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl);
 void print_blocks(super_block * sb, inode * node, free_list * fl);

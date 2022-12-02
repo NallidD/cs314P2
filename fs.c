@@ -3,6 +3,8 @@
 unsigned char inode_bitmap[4096];
 unsigned char data_bitmap[4096];
 unsigned char* fs;
+inode * inodes;
+data_block * data;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl) {
 
@@ -15,7 +17,7 @@ void init_blocks(super_block * sb, inode * node, free_list * fl) {
   sb->data_index = BLOCK_SIZE * 5;
   sb->data_block_total = 1;
 
-  memset(node->direct, 0, 100);
+  node->ptr_to_block = 0;
   node->valid = 1;
   node->size = 0;
   node->type = 1;
@@ -45,17 +47,13 @@ void print_blocks(super_block * sb, inode * node, free_list * fl) {
   sb->block_total, sb->root_index, sb->data_index, sb->data_block_total);
   printf("{ IN->valid, %d }\t{ IN->size, %d }\t{IN->direct[0...100], ", node->valid, node->size);
 
-  for(int i = 0; i < 100; i++) {
-
-    printf("%d", node->direct[i]);
-
-  }
+  printf("pointer to block: %p \n", &node->ptr_to_block);
 
   printf(" }\nFBL bitmap table\n\t");
 
   for(int i = 0; i < 8; i++) {
 
-    printf("%d", get_bit(fl->list[0], (i % 8) + 1));
+    printf("%d", get_bit(fl->list[0], (i % 8) + 1)); //something weird is happening, either uninitialized memory or index out of range
 
   }
 
@@ -63,7 +61,7 @@ void print_blocks(super_block * sb, inode * node, free_list * fl) {
 
   for(int i = 0; i < 8; i++) {
 
-    printf("%d", get_bit(fl->list[1], (i % 8) + 1));
+    printf("%d", get_bit(fl->list[1], (i % 8) + 1)); //something weird is happening, either uninitialized memory or index out of range
 
   }
 
@@ -156,24 +154,55 @@ void unmapfs(){
 
 void formatfs() {
 
+  // struct SB * sb;
+  // struct IN * node;
+  // struct FBL * fl;
+
+  // sb = (struct SB *)malloc(sizeof(struct SB));
+  // node = (struct IN *)malloc(sizeof(struct IN));
+  // fl = (struct FBL *)malloc(sizeof(struct FBL));
+  
+  // init_blocks(sb, node, fl);
+
+  // write_to_buffer(sb, node, fl);
+
+  // print_blocks(sb, node, fl);
+  // print_buffer();
+
+  // free(sb);
+  // free(node);
+  // free(fl);
+
   struct SB * sb;
-  struct IN * node;
   struct FBL * fl;
 
-  sb = (struct SB *)malloc(sizeof(struct SB));
-  node = (struct IN *)malloc(sizeof(struct IN));
-  fl = (struct FBL *)malloc(sizeof(struct FBL));
-  
-  init_blocks(sb, node, fl);
+  memset(fs, 0, BLOCK_SIZE);
+  memset(inode_bitmap, 0, BLOCK_SIZE);
+  memset(data_bitmap, 0, BLOCK_SIZE);
+  memcpy(fs + NODE_TABLE_OFFSET, inode_bitmap, BLOCK_SIZE);
+  memcpy(fs + DATA_TABLE_OFFSET, data_bitmap, BLOCK_SIZE);
 
-  write_to_buffer(sb, node, fl);
+  //inodes need 63 4K blocks
+  //data needs 2,494 4K blocks
 
-  print_blocks(sb, node, fl);
-  print_buffer();
+  inodes = (inode *)malloc(100 * sizeof(struct IN));
+  data = (data_block *)malloc(2494 * sizeof(struct DB));
+  memcpy(fs + INODE_START, inodes, sizeof(struct IN) * 100);
+  memcpy(fs + (INODE_START * 63), data, sizeof(struct DB) * 2494);
 
-  free(sb);
-  free(node);
-  free(fl);
+  for(int i = 0; i < FSSIZE; i++) {
+
+    printf("%d", fs[i]);
+
+    if(i % 256 == 0 && i > 0) {
+
+      printf("\n");
+
+    }
+
+  }
+
+  printf("\n");
 
 }
 
@@ -219,6 +248,22 @@ void loadfs(){
 
 
 void lsfs(){
+
+  //iterate through all the inodes
+  //directory or file will be in the inodes
+  /*
+    root
+      |
+      |---dir1
+      |    |--file.txt
+      |
+      |---dir2
+      |     |--img.jpg
+      |     |--file2.txt
+      |     |--file.txt
+  */
+
+ /**/
   
 }
 
@@ -291,5 +336,8 @@ void removefilefs(char* fname){
 
 
 void extractfilefs(char* fname){
+
+  //reads all the file contents into a redirect file.
+  //./filefs -e a/b/c -f fs > foobar
 
 }
