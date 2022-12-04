@@ -7,6 +7,7 @@ inode * inodes;
 data_block * data;
 int data_index = 0;
 int inode_index = 0;
+int root_inode = 2;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl) {
 
@@ -132,8 +133,6 @@ void rprint_block(int from, int to) {
 
   }
 
-  label(from);
-
   for(int i = from; i < to; i++) {
 
     printf("%d", fs[i]);
@@ -147,54 +146,6 @@ void rprint_block(int from, int to) {
   }
 
   printf("\n");
-
-}
-
-void label(int i) {
-
-  switch (i) {
-
-    case 0:
-
-      printf("Super block:\n");
-
-    break;
-
-    case SUPER_OFFSET:
-
-      printf("inode bitmap:\n");
-
-    break;
-
-    case NODE_TABLE_OFFSET:
-
-      printf("data bitmap:\n");
-
-    break;
-
-    case INODE_START:
-
-      printf("Inodes:\n");
-
-    break;
-
-    default:
-
-      printf("Data:\n");
-
-    break;
-
-  }
-
-}
-
-void write_to_buffer(super_block * sb, inode * node, free_list * fl) {
-
-  for(int i = 0; i < 8; i++) {
-
-    fs[i] = sb->fs_type[i];
-
-  }
 
 }
 
@@ -235,6 +186,13 @@ void formatfs() {
   data = (data_block *)malloc(2494 * sizeof(struct DB));
   memcpy(fs + INODE_START, inodes, sizeof(struct IN) * 100);
   memcpy(fs + (INODE_START * 63), data, sizeof(struct DB) * 2494);
+
+  inode_bitmap[2] = '1';
+
+  dir * root_dir = make_dir();
+  inode * root = make_inode('d', sizeof(root_dir));
+  
+
   
 }
 
@@ -290,14 +248,14 @@ void lsfs(){
       |
       |---dir1
       |    |--file.txt
-      |
+      |    |---hellodir
+      |           |
+      |           |
       |---dir2
       |     |--img.jpg
       |     |--file2.txt
       |     |--file.txt
   */
-
- /**/
   
 }
 
@@ -328,6 +286,7 @@ void addfilefs(char* fname){
   }
 
   *(inodes + inode_index) = *make_inode(size, 0);
+  inode_index++;
 
   int read_test = read(fd, fs + DATA_START, size);
 
@@ -390,10 +349,28 @@ void removefilefs(char* fname){
 
 }
 
-
 void extractfilefs(char* fname){
 
   //reads all the file contents into a redirect file.
   //./filefs -e a/b/c -f fs > foobar
+
+  /*
+  * 
+  * Super block
+  * char fs_type[8];
+  * short block_total;
+  * short root_index; //data root index
+  * short data_index; //data start index
+  * char data_block_total;
+  * 
+  * 
+  *   ./filefs -e a/b/c -f fs > outputfile
+  *   Puts file contents 'c' into outputfile
+  *   Read super block's root index to get to the first data section
+  *   Check if 'a' exists by checking if the root's "next" field points to that directory
+  *   Descend until we hit file 'c'
+  *   Read c from the buffer and printf it
+  * 
+  */
 
 }

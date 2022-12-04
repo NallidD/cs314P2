@@ -40,13 +40,14 @@ extern unsigned char data_bitmap[4096];
 extern unsigned char* fs;
 extern int data_index;
 extern int inode_index;
+extern int root_inode;
 
 typedef struct SB {
 
     char fs_type[8];
     short block_total;
-    short root_index;
-    short data_index;
+    short root_index; //data root index
+    short data_index; //data start index
     char data_block_total;
 
 } __attribute__((packed, aligned(4096))) super_block; //promised for 4096kb of space
@@ -91,8 +92,6 @@ void print_blocks(super_block * sb, inode * node, free_list * fl);
 void print_buffer();
 void print_block(int bd); //bd = block descriptor
 void rprint_block(int from, int to);
-void label(int i);
-void write_to_buffer(super_block * sb, inode * node, free_list * fl);
 unsigned int get_next_data_block(unsigned int curindex);
 inode * make_inode(int size, char type);
 void write_inode(inode * iptr, int inum);
