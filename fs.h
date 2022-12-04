@@ -12,6 +12,7 @@
 #include "bitmap.h"
 
 #define FSSIZE 10485760 //2560 4K blocks
+#define SID 0xBEEF
 #define TOTAL_BLOCKS 2560
 #define BLOCK_SIZE 4096 //4K bytes
 #define TOTAL_DATA_BLOCKS 73400320 //total 512 byte data blocks in the fs
@@ -19,6 +20,11 @@
 #define NODE_TABLE_OFFSET SUPER_OFFSET + BLOCK_SIZE
 #define DATA_TABLE_OFFSET NODE_TABLE_OFFSET + BLOCK_SIZE
 #define INODE_START 12288
+#define DATA_START INODE_START * 63
+
+#ifdef DEBUG
+   #define D 1
+#endif
 
 /*
 
@@ -32,6 +38,8 @@ extern unsigned char inode_bitmap[4096];
 extern unsigned char data_bitmap[4096];
 
 extern unsigned char* fs;
+extern int data_index;
+extern int inode_index;
 
 typedef struct SB {
 
@@ -81,6 +89,9 @@ extern data_block * data;
 void init_blocks(super_block * sb, inode * node, free_list * fl);
 void print_blocks(super_block * sb, inode * node, free_list * fl);
 void print_buffer();
+void print_block(int bd); //bd = block descriptor
+void rprint_block(int from, int to);
+void label(int i);
 void write_to_buffer(super_block * sb, inode * node, free_list * fl);
 unsigned int get_next_data_block(unsigned int curindex);
 inode * make_inode(int size, char type);

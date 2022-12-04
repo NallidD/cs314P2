@@ -5,6 +5,8 @@ unsigned char data_bitmap[4096];
 unsigned char* fs;
 inode * inodes;
 data_block * data;
+int data_index = 0;
+int inode_index = 0;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl) {
 
@@ -71,13 +73,7 @@ void print_blocks(super_block * sb, inode * node, free_list * fl) {
 
 void print_buffer() {
 
-  long long sb = sizeof(struct SB);
-  long long node = sizeof(struct IN);
-  long long fl = sizeof(struct FBL);
-
-  printf("Super Block: \n");
-
-  for(int i = 0; i < sb; i++) {
+  for(int i = 0; i < FSSIZE; i++) {
 
     printf("%d", fs[i]);
 
@@ -91,23 +87,54 @@ void print_buffer() {
 
   printf("\n");
 
-  printf("INode blocks (4): \n");
+}
 
-  for(int i = sb; i < sb + (node * 4); i++) {
+void print_block(int bd) {
 
-    printf("%d", fs[i]);
+    int index = bd * BLOCK_SIZE;
 
-    if(i % 128 == 0 && i > 0) {
+    for(int i = index; index < BLOCK_SIZE * index; i++) {
 
-      printf("\n");
+      printf("%d", fs[index]);
+
+      if(index % 4096 == 0 && index > 0) {
+
+        puts("\n");
+
+      }
 
     }
 
+    puts("\n");
+
+}
+
+void rprint_block(int from, int to) {
+
+  if(from  > to) {
+
+    perror("Function call rprint_block: from is greater than to\n");
+    exit(EXIT_FAILURE);
+
   }
 
-  printf("\nFree list: \n");
+  if(to > FSSIZE) {
 
-  for(int i = sb + (node * 4); i < sb + (node * 4) + fl; i++) {
+    perror("Function call rprint_block: to is greater than FSSIZE\n");
+    exit(EXIT_FAILURE);
+
+  }
+
+  if(from < 0 || to < 0) {
+
+    perror("Function call rprint_block: from or to cannot be less than 0\n");
+    exit(EXIT_FAILURE);
+
+  }
+
+  label(from);
+
+  for(int i = from; i < to; i++) {
 
     printf("%d", fs[i]);
 
@@ -120,6 +147,44 @@ void print_buffer() {
   }
 
   printf("\n");
+
+}
+
+void label(int i) {
+
+  switch (i) {
+
+    case 0:
+
+      printf("Super block:\n");
+
+    break;
+
+    case SUPER_OFFSET:
+
+      printf("inode bitmap:\n");
+
+    break;
+
+    case NODE_TABLE_OFFSET:
+
+      printf("data bitmap:\n");
+
+    break;
+
+    case INODE_START:
+
+      printf("Inodes:\n");
+
+    break;
+
+    default:
+
+      printf("Data:\n");
+
+    break;
+
+  }
 
 }
 
@@ -135,7 +200,7 @@ void write_to_buffer(super_block * sb, inode * node, free_list * fl) {
 
 unsigned int get_next_data_block(unsigned int curindex) {
 
-  return 512 * curindex % 4096;
+  return DATA_START + ((curindex + 1) * 512);
 
 }
 
@@ -154,25 +219,6 @@ void unmapfs(){
 
 void formatfs() {
 
-  // struct SB * sb;
-  // struct IN * node;
-  // struct FBL * fl;
-
-  // sb = (struct SB *)malloc(sizeof(struct SB));
-  // node = (struct IN *)malloc(sizeof(struct IN));
-  // fl = (struct FBL *)malloc(sizeof(struct FBL));
-  
-  // init_blocks(sb, node, fl);
-
-  // write_to_buffer(sb, node, fl);
-
-  // print_blocks(sb, node, fl);
-  // print_buffer();
-
-  // free(sb);
-  // free(node);
-  // free(fl);
-
   struct SB * sb;
   struct FBL * fl;
 
@@ -189,21 +235,7 @@ void formatfs() {
   data = (data_block *)malloc(2494 * sizeof(struct DB));
   memcpy(fs + INODE_START, inodes, sizeof(struct IN) * 100);
   memcpy(fs + (INODE_START * 63), data, sizeof(struct DB) * 2494);
-
-  for(int i = 0; i < FSSIZE; i++) {
-
-    printf("%d", fs[i]);
-
-    if(i % 256 == 0 && i > 0) {
-
-      printf("\n");
-
-    }
-
-  }
-
-  printf("\n");
-
+  
 }
 
 inode * make_inode(int size, char type) {
@@ -226,6 +258,8 @@ void write_inode(inode * iptr, int inum) {
 
   if(i != 0)
     return;
+
+  iptr->valid = 1;
   
   memset(fs, *t, 256);
 
@@ -269,7 +303,7 @@ void lsfs(){
 
 void addfilefs(char* fname){
 
-  int fd = open(fname, O_WRONLY, 0700); //open file to add
+  int fd = open(fname, O_RDWR, 0700); //open file to add
 
   if(fd == -1) {
 
@@ -286,12 +320,34 @@ void addfilefs(char* fname){
 
   lseek(fd, pos, SEEK_SET); //reset position to beginning of file
 
-  if(read(fd, fs, size) != size) {
+  if(size > 512) {
 
-    perror("Could not read file to buffer.\n");
+    perror("File is larger than 512 bytes.\n");
     exit(EXIT_FAILURE);
 
   }
+
+  *(inodes + inode_index) = *make_inode(size, 0);
+
+  int read_test = read(fd, fs + DATA_START, size);
+
+  if(read_test != size) {
+
+    perror("Could not read file to buffer.\n");
+    printf("Errno: %s\n", strerror(errno));
+    exit(EXIT_FAILURE);
+
+  }
+
+  #ifdef D
+
+  if(D) {
+
+    print_buffer();
+
+  }
+
+  #endif
 
 }
 

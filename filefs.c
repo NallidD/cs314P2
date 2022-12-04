@@ -30,33 +30,47 @@ int main(int argc, char** argv){
   char* toremove = NULL;
   char* toextract = NULL;
   char* fsname = NULL;
+  char * todebug = NULL;
   int fd = -1;
   int newfs = 0;
   int filefsname = 0;
  
 
   
-  while ((opt = getopt(argc, argv, "la:r:e:f:")) != -1) {
+  while ((opt = getopt(argc, argv, "dla:r:e:f:")) != -1) {
+
     switch (opt) {
+
     case 'l':
+
       list = 1;
+
       break;
     case 'a':
+
       add = 1;
       toadd = strdup(optarg);
+
       break;
     case 'r':
+
       remove = 1;
       toremove = strdup(optarg);
+
       break;
     case 'e':
+
       extract = 1;
       toextract = strdup(optarg);
+
       break;
     case 'f':
+
       fsname = strdup(optarg);
       filefsname = 1;
+
       break;
+
     default:
       exitusage(argv[0]);
     }
