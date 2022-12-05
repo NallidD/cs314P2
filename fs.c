@@ -170,7 +170,7 @@ void unmapfs(){
 
 void formatfs() {
 
-  struct SB * sb;
+  struct SB * sb = (struct SB *)malloc(sizeof(struct SB));
   struct FBL * fl;
 
   memset(fs, 0, BLOCK_SIZE);
@@ -189,10 +189,23 @@ void formatfs() {
 
   inode_bitmap[2] = '1';
 
+  sb->inode_index = 0;
+  sb->data_index = sb->root_index = INODE_START * 63;
+  sb->data_block_total = 1;
+  sb->block_total = 10; //1 for sb, and 2 bit maps, then 7 for the inodes.
+  
+  for(int i = 0; i < 8; i++) {
+
+    sb->fs_type[i] = 1;
+
+  }
+
   dir * root_dir = make_dir();
   inode * root = make_inode('d', sizeof(root_dir));
   
+  sb->inode_index++;
 
+  memcpy(fs, sb, sizeof(struct SB));
   
 }
 
@@ -263,6 +276,9 @@ void addfilefs(char* fname){
 
   int fd = open(fname, O_RDWR, 0700); //open file to add
 
+  struct SB * sb;
+  memcpy(sb, fs, BLOCK_SIZE);
+
   if(fd == -1) {
 
     perror("File not found.\n");
@@ -285,8 +301,8 @@ void addfilefs(char* fname){
 
   }
 
-  *(inodes + inode_index) = *make_inode(size, 0);
-  inode_index++;
+  *(inodes + sb->inode_index) = *make_inode(size, FSFILE);
+  sb->inode_index++;
 
   int read_test = read(fd, fs + DATA_START, size);
 

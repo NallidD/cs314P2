@@ -21,6 +21,8 @@
 #define DATA_TABLE_OFFSET NODE_TABLE_OFFSET + BLOCK_SIZE
 #define INODE_START 12288
 #define DATA_START INODE_START * 63
+#define FSFILE 0
+#define FSDIR 1
 
 #ifdef DEBUG
    #define D 1
@@ -46,9 +48,10 @@ typedef struct SB {
 
     char fs_type[8];
     short block_total;
-    short root_index; //data root index
-    short data_index; //data start index
+    int root_index; //data root index
+    int data_index; //data start index
     char data_block_total;
+    int inode_index;
 
 } __attribute__((packed, aligned(4096))) super_block; //promised for 4096kb of space
 
@@ -80,7 +83,7 @@ typedef struct Directory {
     int filesizes[100];
     int fileinodes[100];
     int num_files;
-    struct Directory * next;
+    void * next; //type cast to struct Directory use correctly.
 
 } __attribute((packed, aligned(512))) dir;
 
