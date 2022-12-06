@@ -307,6 +307,7 @@ void addfilefs(char* fname){
 
       tdir = make_dir();
       inode * dirnode = make_inode(128, 1);
+      tdir->dir_name = tokens[j];
 
       inodes[sb->inode_index] = *dirnode;
       sb->inode_index++;

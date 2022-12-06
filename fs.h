@@ -79,6 +79,7 @@ typedef struct DB {
 
 typedef struct Directory {
 
+    char * dir_name;
     char * files[64];
     int filesizes[100];
     int fileinodes[100];
