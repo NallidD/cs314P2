@@ -5,6 +5,7 @@ unsigned char data_bitmap[4096];
 unsigned char* fs;
 inode * inodes;
 data_block * data;
+struct SB * sb;
 int data_index = 0;
 int inode_index = 0;
 int root_inode = 2;
@@ -170,7 +171,7 @@ void unmapfs(){
 
 void formatfs() {
 
-  struct SB * sb = (struct SB *)malloc(sizeof(struct SB));
+  sb = (struct SB *)malloc(sizeof(struct SB));
   struct FBL * fl;
 
   memset(fs, 0, BLOCK_SIZE);
@@ -202,6 +203,9 @@ void formatfs() {
 
   dir * root_dir = make_dir();
   inode * root = make_inode('d', sizeof(root_dir));
+
+  memcpy(fs + DATA_START, root_dir, sizeof(root_dir));
+  memcpy(fs + INODE_START, root, sizeof(root));
   
   sb->inode_index++;
 
@@ -247,7 +251,7 @@ dir * make_dir() {
 
 void loadfs(){
 
-
+  //loading done in formatfs
 
 }
 
@@ -274,9 +278,55 @@ void lsfs(){
 
 void addfilefs(char* fname){
 
-  int fd = open(fname, O_RDWR, 0700); //open file to add
+  char * token;
+  char * tokens[64];
+  int i;
+  int j;
+  dir * tdir;
 
-  struct SB * sb;
+  token = strtok(fname, "/");
+
+  for(i = 0; i < 64 && token != NULL; i++) {
+
+    tokens[i] = token;
+
+    token = strtok(NULL, "/");
+
+  }
+
+  int fd; //open file to add
+
+  if(i == 0) { //add to root
+
+    fd = open(fname, O_RDWR, 0700);
+    sb->data_block_total++;
+
+  } else {
+
+    for(j = 0; j < i - 1; j++) {
+
+      tdir = make_dir();
+      inode * dirnode = make_inode(128, 1);
+
+      inodes[sb->inode_index] = *dirnode;
+      sb->inode_index++;
+      sb->data_block_total++;
+
+      memcpy(fs + DATA_START + (sb->data_block_total * 512), tdir, sizeof(tdir));
+      memcpy(fs + (INODE_START * sb->inode_index), dirnode, sizeof(dirnode));
+
+    }
+
+    fd = open(tokens[j + 1], O_RDWR, 0700);
+
+  }
+
+  for(int z = 1; z < i - 1; z++) {
+
+    tdir->fileinodes[z - 1] = inodes[sb->inode_index - i + z].ptr_to_block;
+
+  }
+
   memcpy(sb, fs, BLOCK_SIZE);
 
   if(fd == -1) {
