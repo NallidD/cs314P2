@@ -296,7 +296,7 @@ void addfilefs(char* fname){
 
   int fd; //open file to add
 
-  if(i == 0) { //add to root
+  if(i == 1) { //add to root
 
     fd = open(fname, O_RDWR, 0700);
     sb->data_block_total++;
@@ -310,21 +310,22 @@ void addfilefs(char* fname){
       tdir->dir_name = tokens[j];
 
       inodes[sb->inode_index] = *dirnode;
-      sb->inode_index++;
-      sb->data_block_total++;
-
+      
       memcpy(fs + DATA_START + (sb->data_block_total * 512), tdir, sizeof(tdir));
       memcpy(fs + (INODE_START * sb->inode_index), dirnode, sizeof(dirnode));
 
+      sb->inode_index++;
+      sb->data_block_total++;
+
     }
 
-    fd = open(tokens[j + 1], O_RDWR, 0700);
+    fd = open(tokens[j], O_RDWR, 0700);
 
   }
 
-  for(int z = 1; z < i - 1; z++) {
+  for(int z = 1; z < i; z++) {
 
-    tdir->fileinodes[z - 1] = inodes[sb->inode_index - i + z].ptr_to_block;
+    tdir->fileinodes[z - 1] = inodes[z - sb->inode_index].ptr_to_block;
 
   }
 
@@ -380,7 +381,31 @@ void addfilefs(char* fname){
 
 void removefilefs(char* fname){
 
-  int fd = open(fname, O_RDWR);
+  char * token;
+  char * tokens[64];
+  int i; int j;
+  dir * tdir;
+  int fd;
+
+  token = strtok(fname, "/");
+
+  for(i = 0; i < 64 && token != NULL; i++) {
+
+    tokens[i] = token;
+
+    token = strtok(NULL, "/");
+
+  }
+
+  if(i == 1) {
+
+    fd = open(fname, O_RDWR);
+
+  } else {
+
+    fd = open(tokens[i], O_RDWR);
+
+  }
 
   if(fd == -1) {
 
@@ -408,9 +433,15 @@ void removefilefs(char* fname){
 
   fseek(file, 0, SEEK_SET);
 
-  for(int i = pos; i < size; i++) {
+  for(int j = pos; j < size; j++) {
 
     fs[i] = 0;
+
+  }
+
+  if(i > 0) {
+
+
 
   }
 
