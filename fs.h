@@ -80,7 +80,7 @@ typedef struct DB {
 typedef struct Directory {
 
     char * dir_name;
-    char * files[64];
+    char ** files;
     int filesizes[100];
     int fileinodes[100];
     int num_files;
@@ -102,10 +102,11 @@ unsigned int get_next_data_block(unsigned int curindex);
 inode * make_inode(int size, char type);
 void write_inode(inode * iptr, int inum);
 dir * make_dir();
+void walk_dir(struct Directory * dir);
 void mapfs(int fd);
 void unmapfs();
 void formatfs();
-void loadfs();
+void loadfs(int fd);
 void lsfs();
 void addfilefs(char* fname);
 void removefilefs(char* fname);

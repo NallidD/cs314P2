@@ -108,9 +108,13 @@ int main(int argc, char** argv){
   
   if (newfs){
     formatfs();
+  } else {
+
+    loadfs(fd);
+
   }
 
-  loadfs();
+  
   
   if (add){
     addfilefs(toadd);

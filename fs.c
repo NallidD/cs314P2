@@ -9,7 +9,7 @@ struct SB * sb;
 int data_index = 0;
 int inode_index = 0;
 int root_inode_index = 2;
-dir * root;
+struct Directory * root;
 inode * root_inode;
 
 /* void init_blocks(super_block * sb, inode * node, free_list * fl) {
@@ -174,6 +174,7 @@ void unmapfs(){
 void formatfs() {
 
   sb = (struct SB *)malloc(sizeof(struct SB));
+  root = (struct Directory *)malloc(sizeof(struct Directory));
   struct FBL * fl;
 
   memset(fs, 0, BLOCK_SIZE);
@@ -202,8 +203,7 @@ void formatfs() {
     sb->fs_type[i] = 1;
 
   }
-
-  root = make_dir();
+  root->num_files = 0;
   root_inode = make_inode(sizeof(root), FSDIR);
 
   memcpy(fs + DATA_START, root, sizeof(root));
@@ -212,8 +212,21 @@ void formatfs() {
   sb->inode_index++;
 
   root->next = malloc(64 * sizeof(dir));
+  root->files = (char **)malloc(64 * sizeof(char *));
+  root->num_files = 0;
+
+  sb->data_block_total++;
+  
+  for(int i = 0; i < 64; i++) {
+
+    root->files[i] = (char *)malloc(256 * sizeof(char));
+
+  }
 
   memcpy(fs, sb, sizeof(struct SB));
+  
+
+  
   
 }
 
@@ -252,31 +265,71 @@ dir * make_dir() {
 
 }
 
+void walk_dir(struct Directory * dir) {
 
-void loadfs(){
+  if(!dir)
+    return;
 
-  //loading done in formatfs
+  for(int i = 0; i < 64; i++) { //check if any of the 64 directories allowed are null
+
+    if(&dir->next[i] != NULL) {
+
+        dir = &dir->next[i];
+        walk_dir(dir); //go to the next directory
+
+    }
+
+  }
+
+  //no directories found
+  for(int i = 0; i < dir->num_files; i++) {
+
+    printf("%s\n", dir->files[i]);
+
+  }
+
+}
+
+
+void loadfs(int fd){
+
+  read(fd, fs, sizeof(fs));
+
+  sb = (struct SB *)malloc(sizeof(struct SB));
+  root = (struct Directory *)malloc(sizeof(struct Directory));
+
+  for(int i = 0; i < 8; i++) {
+
+    sb->fs_type[i] = fs[i];
+
+  }
+
+  memcpy(&sb->block_total, fs + 8, 16);
+  memcpy(&sb->root_index, fs + 24, 32);
+
+  // memset(fs, 0, BLOCK_SIZE);
+  // memset(inode_bitmap, 0, BLOCK_SIZE);
+  // memset(data_bitmap, 0, BLOCK_SIZE);
+
+  // memcpy(fs + NODE_TABLE_OFFSET, inode_bitmap, BLOCK_SIZE);
+  // memcpy(fs + DATA_TABLE_OFFSET, data_bitmap, BLOCK_SIZE);
+
+  // inodes = (inode *)malloc(100 * sizeof(struct IN));
+  // data = (data_block *)malloc(2494 * sizeof(struct DB));
+  // memcpy(fs + INODE_START, inodes, sizeof(struct IN) * 100);
+  // memcpy(fs + (INODE_START * 63), data, sizeof(struct DB) * 2494);
+
+  // memcpy(root, fs + DATA_START, sizeof(root));
+  // memcpy(sb, fs, BLOCK_SIZE);
+  // memcpy(inode_bitmap, fs + INODE_START, BLOCK_SIZE);
+  // memcpy(data_bitmap, fs + DATA_TABLE_OFFSET, BLOCK_SIZE);
 
 }
 
 
 void lsfs(){
 
-  //iterate through all the inodes
-  //directory or file will be in the inodes
-  /*
-    root
-      |
-      |---dir1
-      |    |--file.txt
-      |    |---hellodir
-      |           |
-      |           |
-      |---dir2
-      |     |--img.jpg
-      |     |--file2.txt
-      |     |--file.txt
-  */
+  walk_dir(root);
   
 }
 
@@ -286,7 +339,7 @@ void addfilefs(char* fname){
   char * tokens[64];
   int i;
   int j;
-  dir * tdir, * root;
+  dir * tdir; dir * temp;
 
   token = strtok(fname, "/");
 
@@ -303,31 +356,55 @@ void addfilefs(char* fname){
   if(i == 1) { //add to root
 
     fd = open(fname, O_RDWR, 0700);
-    sb->data_block_total++;
-    tdir = root;
+    
 
-    root->files[sb->data_block_total] = fname;
+    root->files[root->num_files] = fname;
     root->filesizes[sb->data_block_total] = 512;
     root->fileinodes[sb->inode_index] = sb->inode_index;
     root->num_files++;
     root->next = NULL;
 
+    sb->data_block_total++;
+
   } else {
 
     for(j = 0; j < i - 1; j++) {
 
-      tdir = make_dir();
-      inode * dirnode = make_inode(128, 1);
+      tdir = (dir *)malloc(sizeof(struct Directory));
+      tdir->num_files = 0;
+      inode * dirnode = make_inode(128, FSDIR);
       tdir->dir_name = tokens[j];
+      sb->inode_index++;
+      sb->data_block_total++;
+
+      memcpy(fs + (DATA_START * sb->data_block_total), tdir, sizeof(tdir));
 
       if(j == 0) {
 
-        root->next[j] = *(struct Directory *)tdir;
+        root->next[j] = *tdir;
+
+      } else if(j > 0 && j < i - 2) {
+
+        temp = (dir *)malloc(sizeof(dir));
+        temp->num_files = 0;
+        tdir->next = temp;
+        temp->dir_name = tokens[j];
+        sb->inode_index++;
+        sb->data_block_total++;
+
+        memcpy(fs + (DATA_START * sb->data_block_total), temp, sizeof(temp));
 
       } else {
 
-        dir * temp = tdir->next;
-        temp->dir_name = tokens[j];
+        temp->num_files = 0;
+        temp->files[temp->num_files] = fname;
+        temp->filesizes[temp->num_files] = 512;
+        temp->fileinodes[temp->num_files] = sb->inode_index;
+
+        sb->inode_index++;
+        sb->data_block_total++;
+
+        memcpy(fs + (DATA_START * sb->data_block_total), temp, sizeof(temp));
 
       }
 
@@ -338,8 +415,6 @@ void addfilefs(char* fname){
 
       sb->inode_index++;
       sb->data_block_total++;
-
-      
 
     }
 
@@ -494,5 +569,54 @@ void extractfilefs(char* fname){
   *   Read c from the buffer and printf it
   * 
   */
+
+  dir * tdir = root;
+  int cur_data_index = DATA_START;
+  int cur_inode_index = INODE_START;
+  int j, i;
+
+  char * token;
+  char * tokens[64];
+
+  token = strtok(fname, "/");
+
+  for(i = 0; i < 64 && token != NULL; i++) {
+
+    tokens[i] = token;
+
+    token = strtok(NULL, "/");
+
+  }
+
+  if(i == 1) {
+
+    for(int z = 0; z < root->num_files || tdir != NULL; i++) {
+
+    if(inodes[3 + z].type == FSDIR) {
+
+        tdir = root->next;
+        cur_data_index += 512;
+        cur_inode_index += 256;
+
+      } else {
+
+        char * file_buffer = NULL;
+        char c;
+
+        for(j = DATA_START + (j * cur_data_index); j <  (DATA_START + (j * cur_data_index)) + 512 && fs[j] != 0; i++) {
+
+          c = fs[j];
+          memcpy(file_buffer + i, &c, sizeof(char));
+
+        }
+
+        int strlen = j;
+        puts(file_buffer);
+
+      }
+
+    }
+    
+  }
 
 }
