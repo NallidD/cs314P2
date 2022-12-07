@@ -42,7 +42,7 @@ extern unsigned char data_bitmap[4096];
 extern unsigned char* fs;
 extern int data_index;
 extern int inode_index;
-extern int root_inode;
+extern int root_inode_index;
 
 typedef struct SB {
 
@@ -84,11 +84,13 @@ typedef struct Directory {
     int filesizes[100];
     int fileinodes[100];
     int num_files;
-    void * next; //type cast to struct Directory use correctly.
+    struct Directory * next; //type cast to struct Directory use correctly.
 
 } __attribute((packed, aligned(512))) dir;
 
+extern dir * root;
 extern inode * inodes;
+extern inode * root_inode;
 extern data_block * data;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl);

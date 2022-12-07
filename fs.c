@@ -8,7 +8,9 @@ data_block * data;
 struct SB * sb;
 int data_index = 0;
 int inode_index = 0;
-int root_inode = 2;
+int root_inode_index = 2;
+dir * root;
+inode * root_inode;
 
 void init_blocks(super_block * sb, inode * node, free_list * fl) {
 
@@ -201,13 +203,15 @@ void formatfs() {
 
   }
 
-  dir * root_dir = make_dir();
-  inode * root = make_inode('d', sizeof(root_dir));
+  root = make_dir();
+  root_inode = make_inode(sizeof(root), FSDIR);
 
-  memcpy(fs + DATA_START, root_dir, sizeof(root_dir));
-  memcpy(fs + INODE_START, root, sizeof(root));
+  memcpy(fs + DATA_START, root, sizeof(root));
+  memcpy(fs + INODE_START, root_inode, sizeof(root));
   
   sb->inode_index++;
+
+  root->next = malloc(64 * sizeof(dir));
 
   memcpy(fs, sb, sizeof(struct SB));
   
@@ -282,7 +286,7 @@ void addfilefs(char* fname){
   char * tokens[64];
   int i;
   int j;
-  dir * tdir;
+  dir * tdir, * root;
 
   token = strtok(fname, "/");
 
@@ -300,6 +304,13 @@ void addfilefs(char* fname){
 
     fd = open(fname, O_RDWR, 0700);
     sb->data_block_total++;
+    tdir = root;
+
+    root->files[sb->data_block_total] = fname;
+    root->filesizes[sb->data_block_total] = 512;
+    root->fileinodes[sb->inode_index] = sb->inode_index;
+    root->num_files++;
+    root->next = NULL;
 
   } else {
 
@@ -309,6 +320,17 @@ void addfilefs(char* fname){
       inode * dirnode = make_inode(128, 1);
       tdir->dir_name = tokens[j];
 
+      if(j == 0) {
+
+        root->next[j] = *(struct Directory *)tdir;
+
+      } else {
+
+        dir * temp = tdir->next;
+        temp->dir_name = tokens[j];
+
+      }
+
       inodes[sb->inode_index] = *dirnode;
       
       memcpy(fs + DATA_START + (sb->data_block_total * 512), tdir, sizeof(tdir));
@@ -316,6 +338,8 @@ void addfilefs(char* fname){
 
       sb->inode_index++;
       sb->data_block_total++;
+
+      
 
     }
 
