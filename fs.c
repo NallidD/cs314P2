@@ -225,8 +225,6 @@ void formatfs() {
 
   memcpy(fs, sb, sizeof(struct SB));
   
-
-  
   
 }
 
@@ -289,7 +287,6 @@ void walk_dir(struct Directory * dir) {
   }
 
 }
-
 
 void loadfs(int fd){
 
