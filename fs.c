@@ -12,145 +12,145 @@ int root_inode_index = 2;
 dir * root;
 inode * root_inode;
 
-void init_blocks(super_block * sb, inode * node, free_list * fl) {
+/* void init_blocks(super_block * sb, inode * node, free_list * fl) {
 
-  memset(inode_bitmap, 0, BLOCK_SIZE);
-  memset(data_bitmap, 0, BLOCK_SIZE);
+//   memset(inode_bitmap, 0, BLOCK_SIZE);
+//   memset(data_bitmap, 0, BLOCK_SIZE);
 
-  memset(sb->fs_type, 1, 8);
-  sb->block_total = 4;
-  sb->root_index = BLOCK_SIZE * 5;
-  sb->data_index = BLOCK_SIZE * 5;
-  sb->data_block_total = 1;
+//   memset(sb->fs_type, 1, 8);
+//   sb->block_total = 4;
+//   sb->root_index = BLOCK_SIZE * 5;
+//   sb->data_index = BLOCK_SIZE * 5;
+//   sb->data_block_total = 1;
 
-  node->ptr_to_block = 0;
-  node->valid = 1;
-  node->size = 0;
-  node->type = 1;
+//   node->ptr_to_block = 0;
+//   node->valid = 1;
+//   node->size = 0;
+//   node->type = 1;
 
-  for(int i = 0; i < 8; i++) {
+//   for(int i = 0; i < 8; i++) {
 
-    fl->list[i] = make_bitmap(8);
-    memset(fl->list + i, 0, 8);
+//     fl->list[i] = make_bitmap(8);
+//     memset(fl->list + i, 0, 8);
 
-  }
+//   }
 
-}
+// }
 
-void print_blocks(super_block * sb, inode * node, free_list * fl) {
+// void print_blocks(super_block * sb, inode * node, free_list * fl) {
 
-  printf("Struct SB: %ld\tStruct IN: %ld\tStruct FBL: %ld\n", sizeof(struct SB), sizeof(struct IN), sizeof(struct FBL));
-  printf("Name-value pairings of struct files.\n");
-  printf("{ SB->fs_type[0...7], ");
+//   printf("Struct SB: %ld\tStruct IN: %ld\tStruct FBL: %ld\n", sizeof(struct SB), sizeof(struct IN), sizeof(struct FBL));
+//   printf("Name-value pairings of struct files.\n");
+//   printf("{ SB->fs_type[0...7], ");
 
-  for(int i = 0; i < 8; i++) {
+//   for(int i = 0; i < 8; i++) {
 
-    printf("%d", sb->fs_type[i]);
+//     printf("%d", sb->fs_type[i]);
 
-  }
+//   }
 
-  printf(" }\t{ SB->block_total, %d }\t{ SB->root_index, %d }\t{ SB->data_index, %d }\t{ SB->data_block_total, %d }\t\n",
-  sb->block_total, sb->root_index, sb->data_index, sb->data_block_total);
-  printf("{ IN->valid, %d }\t{ IN->size, %d }\t{IN->direct[0...100], ", node->valid, node->size);
+//   printf(" }\t{ SB->block_total, %d }\t{ SB->root_index, %d }\t{ SB->data_index, %d }\t{ SB->data_block_total, %d }\t\n",
+//   sb->block_total, sb->root_index, sb->data_index, sb->data_block_total);
+//   printf("{ IN->valid, %d }\t{ IN->size, %d }\t{IN->direct[0...100], ", node->valid, node->size);
 
-  printf("pointer to block: %p \n", &node->ptr_to_block);
+//   printf("pointer to block: %p \n", &node->ptr_to_block);
 
-  printf(" }\nFBL bitmap table\n\t");
+//   printf(" }\nFBL bitmap table\n\t");
 
-  for(int i = 0; i < 8; i++) {
+//   for(int i = 0; i < 8; i++) {
 
-    printf("%d", get_bit(fl->list[0], (i % 8) + 1)); //something weird is happening, either uninitialized memory or index out of range
+//     printf("%d", get_bit(fl->list[0], (i % 8) + 1)); //something weird is happening, either uninitialized memory or index out of range
 
-  }
+//   }
 
-  printf("\n\t");
+//   printf("\n\t");
 
-  for(int i = 0; i < 8; i++) {
+//   for(int i = 0; i < 8; i++) {
 
-    printf("%d", get_bit(fl->list[1], (i % 8) + 1)); //something weird is happening, either uninitialized memory or index out of range
+//     printf("%d", get_bit(fl->list[1], (i % 8) + 1)); //something weird is happening, either uninitialized memory or index out of range
 
-  }
+//   }
 
-  printf("\n");
+//   printf("\n");
 
-}
+// }
 
-void print_buffer() {
+// void print_buffer() {
 
-  for(int i = 0; i < FSSIZE; i++) {
+//   for(int i = 0; i < FSSIZE; i++) {
 
-    printf("%d", fs[i]);
+//     printf("%d", fs[i]);
 
-    if(i % 128 == 0 && i > 0) {
+//     if(i % 128 == 0 && i > 0) {
 
-      printf("\n");
+//       printf("\n");
 
-    }
+//     }
 
-  }
+//   }
 
-  printf("\n");
+//   printf("\n");
 
-}
+// }
 
-void print_block(int bd) {
+// void print_block(int bd) {
 
-    int index = bd * BLOCK_SIZE;
+//     int index = bd * BLOCK_SIZE;
 
-    for(int i = index; index < BLOCK_SIZE * index; i++) {
+//     for(int i = index; index < BLOCK_SIZE * index; i++) {
 
-      printf("%d", fs[index]);
+//       printf("%d", fs[index]);
 
-      if(index % 4096 == 0 && index > 0) {
+//       if(index % 4096 == 0 && index > 0) {
 
-        puts("\n");
+//         puts("\n");
 
-      }
+//       }
 
-    }
+//     }
 
-    puts("\n");
+//     puts("\n");
 
-}
+// }
 
-void rprint_block(int from, int to) {
+// void rprint_block(int from, int to) {
 
-  if(from  > to) {
+//   if(from  > to) {
 
-    perror("Function call rprint_block: from is greater than to\n");
-    exit(EXIT_FAILURE);
+//     perror("Function call rprint_block: from is greater than to\n");
+//     exit(EXIT_FAILURE);
 
-  }
+//   }
 
-  if(to > FSSIZE) {
+//   if(to > FSSIZE) {
 
-    perror("Function call rprint_block: to is greater than FSSIZE\n");
-    exit(EXIT_FAILURE);
+//     perror("Function call rprint_block: to is greater than FSSIZE\n");
+//     exit(EXIT_FAILURE);
 
-  }
+//   }
 
-  if(from < 0 || to < 0) {
+//   if(from < 0 || to < 0) {
 
-    perror("Function call rprint_block: from or to cannot be less than 0\n");
-    exit(EXIT_FAILURE);
+//     perror("Function call rprint_block: from or to cannot be less than 0\n");
+//     exit(EXIT_FAILURE);
 
-  }
+//   }
 
-  for(int i = from; i < to; i++) {
+//   for(int i = from; i < to; i++) {
 
-    printf("%d", fs[i]);
+//     printf("%d", fs[i]);
 
-    if(i % 128 == 0 && i > 0) {
+//     if(i % 128 == 0 && i > 0) {
 
-      printf("\n");
+//       printf("\n");
 
-    }
+//     }
 
-  }
+//   }
 
-  printf("\n");
+//   printf("\n");
 
-}
+// } */
 
 unsigned int get_next_data_block(unsigned int curindex) {
 
